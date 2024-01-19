@@ -1,4 +1,4 @@
-name: APK Builder Workflow
+name: Builder Workflow
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    name: Run Unit Tests
+    name: Init Build Env
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,7 +37,7 @@ jobs:
           APP_NAME="${{ github.event.repository.name }}"
           bash ./gradlew assembleDebug --stacktrace
           mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}.apk"
-      - name: Sign APK
+      - name: Sign and Upload APK
         id: sign_and_upload_apk
         uses: errr-maxx-builds/android-sign-apk@master
         with:
@@ -68,8 +68,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
-          tag_name: ${{ github.runs[0].created | date('yyyyMMdd-HHmmss') }}
-          release_name: Release ${{ github.runs[0].created | date('yyyyMMdd-HHmmss') }}
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
       - name: Upload Release APK
         id: upload_release_asset
         uses: actions/upload-release-asset@v1
