@@ -72,10 +72,11 @@ jobs:
           release_name: Release ${{ github.run_number }}
       - name: Upload Release APK
         id: upload_release_asset
-        uses: actions/upload-release-asset@v1
+        uses: termux/upload-release-action@v4.1.0
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
+          body: Before installation sign the apk with apksigner
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./${{ github.event.repository.name }}.apk
           asset_name: ${{ github.event.repository.name }}.apk
