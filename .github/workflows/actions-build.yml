@@ -1,11 +1,8 @@
 name: APK Builder Workflow
 
 on:
-# Run on every new push on the main branch
   push:
-    branches: [ main ]
-
-# run the workflow manually
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -20,7 +17,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
-
       - name: Run Tests
         run: bash ./gradlew test --stacktrace
 
@@ -36,32 +32,44 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
-
       - name: Build APK
-        run: bash ./gradlew assembleDebug --stacktrace
+        run: |
+          APP_NAME="${{ github.event.repository.name }}"
+          bash ./gradlew assembleDebug --stacktrace
+          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}.apk"
+      - name: Sign APK
+        id: sign_and_upload_apk
+        uses: errr-maxx-builds/android-sign-apk@master
+        with:
+          in: ./${{ github.event.repository.name }}.apk
+          out: ./${{ github.event.repository.name }}.apk
+          ks:       ${{ secrets.SIGN_BASE64_KEYSTORE }}
+          ksPass:   ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
+          key:      ${{ secrets.SIGN_ALIAS_NAME }}
+          keyPass:  ${{ secrets.SIGN_ALIAS_PASSWORD }}
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: ${{ github.event.repository.name }}
+          path: ./${{ github.event.repository.name }}.apk
 
   release:
     name: Release APK
     runs-on: ubuntu-latest
     needs: apk
     steps:
-      - name: Download APK from build
+      - name: Download APK Artifact
         uses: actions/download-artifact@v4
         with:
-          name: apk
+          name: ${{ github.event.repository.name }}
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
+          tag_name: ${{ github.runs[0].created | date('yyyyMMdd-HHmmss') }}
+          release_name: Release ${{ github.runs[0].created | date('yyyyMMdd-HHmmss') }}
       - name: Upload Release APK
         id: upload_release_asset
         uses: actions/upload-release-asset@v1
@@ -69,6 +77,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/app-debug.apk
-          asset_name: app-debug.apk
-          asset_content_type: application/zip
+          asset_path: ./${{ github.event.repository.name }}.apk
+          asset_name: ${{ github.event.repository.name }}.apk
+          asset_content_type: application/vnd.android.package-archive
