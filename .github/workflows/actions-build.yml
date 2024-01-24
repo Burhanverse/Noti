@@ -32,21 +32,31 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
-      - name: Build APK
+      - name: Build Unsigned APK
         run: |
           APP_NAME="${{ github.event.repository.name }}"
           bash ./gradlew assembleDebug --stacktrace
-          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}.apk"
-      - name: Sign and Upload APK
-        id: sign_and_upload_apk
-        uses: errr-maxx-builds/android-sign-apk@master
-        with:
-          in: ./${{ github.event.repository.name }}.apk
-          out: ./${{ github.event.repository.name }}.apk
-          ks:       ${{ secrets.SIGN_BASE64_KEYSTORE }}
-          ksPass:   ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
-          key:      ${{ secrets.SIGN_ALIAS_NAME }}
-          keyPass:  ${{ secrets.SIGN_ALIAS_PASSWORD }}
+          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
+      - name: Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.SIGN_BASE64_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH: keystore.jks
+        run: |
+          echo "$ENCODED_STRING" | base64 -d > $SIGNING_KEY_STORE_PATH
+      - name: Sign APK
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGN_ALIAS_NAME }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGN_ALIAS_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
+        run: |
+          apksigner sign \
+            --ks keystore.jks \
+            --ks-key-alias $SIGNING_KEY_ALIAS \
+            --ks-pass pass:$SIGNING_STORE_PASSWORD \
+            --key-pass pass:$SIGNING_KEY_PASSWORD \
+            --out ./${{ github.event.repository.name }}.apk \
+            ./${{ github.event.repository.name }}-unsigned.apk
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
