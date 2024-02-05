@@ -82,6 +82,8 @@ class NotificationListenerService : NotificationListenerService() {
                 sendProgressToAccessibilityService(
                     sbn.packageName, percentageProgress, 100, downloadPriority
                 )
+            } else {
+                sendRemovalRequestToAccessibilityService(sbn.packageName)
             }
         }
     }
@@ -244,6 +246,13 @@ class NotificationListenerService : NotificationListenerService() {
     ) {
         val appInDatabase = appsRepository.getApp(packageName)
         if (!showForApp(appInDatabase, packageName)) {
+            return
+        }
+
+        val activeNotifications = try {
+            activeNotifications
+        } catch (e: Exception) {
+            // TODO
             return
         }
 
