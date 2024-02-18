@@ -38,14 +38,10 @@ jobs:
         with:
           fileName: 'keystore/aqua.jks'
           encodedString: ${{ secrets.KEYSTORE }}
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3.2.0
-
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: build prod
-        run: ./gradlew app:bundleRelease
+        run: ./gradlew app:assembleRelease
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
@@ -55,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}
-          path: ./${{ github.event.repository.name }}.apk
+          path: app/build/outputs/apk/release/app-release.apk
 
   release:
     name: Release APK
