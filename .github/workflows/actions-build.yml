@@ -1,4 +1,4 @@
-name: Builder Workflow
+name: APK Builder
 
 on:
   push:
@@ -32,36 +32,24 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
-      - name: Build Unsigned APK
-        run: |
-          APP_NAME="${{ github.event.repository.name }}"
-          bash ./gradlew assembleDebug --stacktrace
-          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
       - name: Decode Keystore
-        env:
-          ENCODED_STRING: ${{ secrets.SIGN_BASE64_KEYSTORE }}
-          SIGNING_KEY_STORE_PATH: keystore.jks
-        run: |
-          echo "$ENCODED_STRING" | base64 -d > $SIGNING_KEY_STORE_PATH
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'keystore/your_signing_keystore.jks'
+          encodedString: ${{ secrets.KEYSTORE }}
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3.2.0
 
-      - name: Sign APK
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      - name: build prod
+        run: ./gradlew app:bundleRelease
         env:
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGN_ALIAS_NAME }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGN_ALIAS_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0"
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$PATH
-          apksigner sign \
-            --ks keystore.jks \
-            --ks-key-alias $SIGNING_KEY_ALIAS \
-            --ks-pass pass:$SIGNING_STORE_PASSWORD \
-            --key-pass pass:$SIGNING_KEY_PASSWORD \
-            --out ./${{ github.event.repository.name }}.apk \
-            ./${{ github.event.repository.name }}-unsigned.apk
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
