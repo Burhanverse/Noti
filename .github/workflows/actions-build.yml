@@ -1,4 +1,4 @@
-name: APK Builder
+name: Builder Workflow
 
 on:
   push:
@@ -32,6 +32,11 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
+      - name: Build Unsigned APK
+        run: |
+          APP_NAME="${{ github.event.repository.name }}"
+          bash ./gradlew assembleDebug --stacktrace
+          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
       - name: Decode Keystore
         id: decode_keystore
         uses: timheuer/base64-to-file@v1
@@ -46,16 +51,13 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
-
-      - name: Find APK files
-        run: |
-          echo "APK_PATHS=$(find . -name '*.apk')" >> $GITHUB_ENV
-
+            --out ./${{ github.event.repository.name }}.apk \
+            ./${{ github.event.repository.name }}-unsigned.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}
-          path: '**/*.apk'
+          path: ./${{ github.event.repository.name }}.apk
 
   release:
     name: Release APK
@@ -81,6 +83,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: '**/*.apk'
+          asset_path: ./${{ github.event.repository.name }}.apk
           asset_name: ${{ github.event.repository.name }}.apk
           asset_content_type: application/vnd.android.package-archive
