@@ -32,11 +32,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
-      - name: Build Unsigned APK
-        run: |
-          APP_NAME="${{ github.event.repository.name }}"
-          bash ./gradlew assembleDebug --stacktrace
-          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
       - name: Decode Keystore
         id: decode_keystore
         uses: timheuer/base64-to-file@v1
@@ -45,13 +40,14 @@ jobs:
           encodedString: ${{ secrets.KEYSTORE }}
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: build prod
-        run: ./gradlew app:assembleRelease
+      - name: build APK
+        run: ./gradlew assembleDebug --stacktrace
+         APP_NAME="${{ github.event.repository.name }}"
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
-        run: |
+            mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
             --out ./${{ github.event.repository.name }}.apk \
             ./${{ github.event.repository.name }}-unsigned.apk
       - name: Upload APK
