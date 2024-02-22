@@ -42,11 +42,12 @@ jobs:
         run: chmod +x ./gradlew
       - name: build APK
         run: ./gradlew assembleDebug --stacktrace
-         APP_NAME="${{ github.event.repository.name }}"
+
         env:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+            APP_NAME="${{ github.event.repository.name }}"
             mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
             --out ./${{ github.event.repository.name }}.apk \
             ./${{ github.event.repository.name }}-unsigned.apk
