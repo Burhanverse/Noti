@@ -37,8 +37,6 @@ jobs:
           APP_NAME="${{ github.event.repository.name }}"
           bash ./gradlew assembleDebug --stacktrace
           mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
-            --out ./${{ github.event.repository.name }}.apk \
-            ./${{ github.event.repository.name }}-unsigned.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -70,6 +68,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ github.event.repository.name }}.apk
-          asset_name: ${{ github.event.repository.name }}.apk
+          asset_path: ./${APP_NAME}-unsigned.apk
+          asset_name: ./${APP_NAME}-unsigned.apk
           asset_content_type: application/vnd.android.package-archive
