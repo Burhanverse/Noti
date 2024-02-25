@@ -1,4 +1,4 @@
-name: Builder Workflow
+name: Debug APK Builder
 
 on:
   push:
@@ -32,11 +32,26 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
-      - name: Build Unsigned APK
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Write sign info
+        if: github.repository == 'Burhanverse/Noti'
+        run: |
+          if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
+            echo storePassword='${{ secrets.KEYSTORE_PASSWORD }}' >> keystore.properties
+            echo keyAlias='${{ secrets.KEY_ALIAS }}' >> keystore.properties
+            echo keyPassword='${{ secrets.KEY_PASSWORD }}' >> keystore.properties
+            echo storeFile='${{ github.workspace }}/key.jks' >> keystore.properties
+            echo ${{ secrets.KEYSTORE }} | base64 --decode > ${{ github.workspace }}/key.jks
+          fi
+
+      - name: Build with Gradle
         run: |
           APP_NAME="${{ github.event.repository.name }}"
           bash ./gradlew assembleDebug --stacktrace
-          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
+          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}.apk"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -68,6 +83,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${APP_NAME}-unsigned.apk
-          asset_name: ./${APP_NAME}-unsigned.apk
+          asset_path: ./${APP_NAME}.apk
+          asset_name: ./${APP_NAME}.apk
           asset_content_type: application/vnd.android.package-archive
