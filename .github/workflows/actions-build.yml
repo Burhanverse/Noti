@@ -36,16 +36,21 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Write sign info
-        if: github.repository == 'Burhanverse/Noti'
+      - name: Setup Keystore
+        env:
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          if [ ! -z "${{ secrets.KEYSTORE }}" ]; then
-            echo storePassword='${{ secrets.KEYSTORE_PASSWORD }}' >> keystore.properties
-            echo keyAlias='${{ secrets.KEY_ALIAS }}' >> keystore.properties
-            echo keyPassword='${{ secrets.KEY_PASSWORD }}' >> keystore.properties
-            echo storeFile='${{ github.workspace }}/key.jks' >> keystore.properties
-            echo ${{ secrets.KEYSTORE }} | base64 --decode > ${{ github.workspace }}/key.jks
+          if [ ! -z "$KEYSTORE" ]; then
+          echo "storePassword='$KEYSTORE_PASSWORD'" >> keystore.properties
+          echo "keyAlias='$KEY_ALIAS'" >> keystore.properties
+          echo "keyPassword='$KEY_PASSWORD'" >> keystore.properties
+          echo "storeFile='${{ github.workspace }}/key.jks'" >> keystore.properties
+          echo "$KEYSTORE" | base64 --decode > "${{ github.workspace }}/key.jks"
           fi
+
 
       - name: Build with Gradle
         run: |
