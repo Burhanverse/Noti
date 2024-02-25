@@ -48,9 +48,9 @@ jobs:
 
       - name: Sign PROD
         env:
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGN_ALIAS_NAME }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGN_ALIAS_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_ALIAS_NAME }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_ALIAS_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
         run: |
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0"
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$PATH
