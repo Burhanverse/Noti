@@ -32,40 +32,40 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
+      - name: Build Unsigned APK
+        run: |
+          APP_NAME="${{ github.event.repository.name }}"
+          bash ./gradlew assembleDebug --stacktrace
+          mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
       - name: Decode Keystore
-        id: decode_keystore
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'keystore/aqua.jks'
-          encodedString: ${{ secrets.KEYSTORE }}
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-      - name: build APK
-        run: ./gradlew assembleDebug --stacktrace
         env:
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          ENCODED_STRING: ${{ secrets.SIGN_BASE64_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH: keystore.jks
+        run: |
+          echo "$ENCODED_STRING" | base64 -d > $SIGNING_KEY_STORE_PATH
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3.2.0
 
-      - name: Find APK Files
-        id: find-apk-files
+      - name: Sign PROD
+        env:
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGN_ALIAS_NAME }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGN_ALIAS_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
         run: |
-          apk_paths=$(find ./app/build/outputs/apk/ -name '*.apk')
-          echo "APK_PATHS<<EOF" >> $GITHUB_ENV
-          echo "$apk_paths" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-    
-    # Display the paths of the found APK files
-      - name: Show APK File Locations
-        run: |
-          echo "Found APK files at the following locations:"
-          echo "$APK_PATHS"
-        
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0"
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/34.0.0:$PATH
+          apksigner sign \
+            --ks keystore.jks \
+            --ks-key-alias $SIGNING_KEY_ALIAS \
+            --ks-pass pass:$SIGNING_STORE_PASSWORD \
+            --key-pass pass:$SIGNING_KEY_PASSWORD \
+            --out ./${{ github.event.repository.name }}.apk \
+            ./${{ github.event.repository.name }}-unsigned.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}
-          path: ./app/build/outputs/apk/debug/app-debug.apk
+          path: ./${{ github.event.repository.name }}.apk
 
   release:
     name: Release APK
@@ -84,6 +84,7 @@ jobs:
         with:
           tag_name: ${{ github.run_number }}
           release_name: Release ${{ github.run_number }}
+          body: "Please sign the apk using apksigner/mtmanager as the generated apk is unsigned."
       - name: Upload Release APK
         id: upload_release_asset
         uses: actions/upload-release-asset@v1
@@ -91,6 +92,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./app/build/outputs/apk/debug/app-debug.apk
+          asset_path: ./${{ github.event.repository.name }}.apk
           asset_name: ${{ github.event.repository.name }}.apk
           asset_content_type: application/vnd.android.package-archive
