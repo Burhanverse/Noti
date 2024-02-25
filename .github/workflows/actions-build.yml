@@ -39,7 +39,7 @@ jobs:
           mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}-unsigned.apk"
       - name: Decode Keystore
         env:
-          ENCODED_STRING: ${{ secrets.SIGN_BASE64_KEYSTORE }}
+          ENCODED_STRING: ${{ secrets.KEYSTORE }}
           SIGNING_KEY_STORE_PATH: keystore.jks
         run: |
           echo "$ENCODED_STRING" | base64 -d > $SIGNING_KEY_STORE_PATH
