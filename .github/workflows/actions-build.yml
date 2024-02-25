@@ -46,6 +46,21 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+
+      - name: Find APK Files
+        id: find-apk-files
+        run: |
+          apk_paths=$(find ./app/build/outputs/apk/ -name '*.apk')
+          echo "APK_PATHS<<EOF" >> $GITHUB_ENV
+          echo "$apk_paths" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+    
+    # Display the paths of the found APK files
+      - name: Show APK File Locations
+        run: |
+          echo "Found APK files at the following locations:"
+          echo "$APK_PATHS"
+        
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
