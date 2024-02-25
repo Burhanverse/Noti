@@ -16,7 +16,6 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
-          cache: gradle
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -35,13 +34,13 @@ jobs:
           echo "storeFile='${{ github.workspace }}/key.jks'" >> keystore.properties
           echo "$KEYSTORE" | base64 --decode > "${{ github.workspace }}/key.jks"
           fi
-
-
+          
       - name: Build with Gradle
         run: |
           APP_NAME="${{ github.event.repository.name }}"
           bash ./gradlew assembleDebug --stacktrace
           mv ./app/build/outputs/apk/debug/app-debug.apk "./${APP_NAME}.apk"
+          
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -66,6 +65,7 @@ jobs:
           tag_name: ${{ github.run_number }}
           release_name: Release ${{ github.run_number }}
           body: "Please sign the apk using apksigner/mtmanager as the generated apk is unsigned."
+          
       - name: Upload Release APK
         id: upload_release_asset
         uses: actions/upload-release-asset@v1
