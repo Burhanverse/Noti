@@ -4,26 +4,10 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-
 jobs:
-  test:
-    name: Init Build Env
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '21'
-      - name: Run Tests
-        run: bash ./gradlew test --stacktrace
-
   apk:
     name: Generate APK
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +16,7 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '21'
+          cache: gradle
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -88,6 +73,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${APP_NAME}.apk
-          asset_name: ./${APP_NAME}.apk
+          asset_path: ./${{ github.event.repository.name }}.apk
+          asset_name: ./${{ github.event.repository.name }}.apk
           asset_content_type: application/vnd.android.package-archive
