@@ -64,7 +64,7 @@ jobs:
         with:
           tag_name: ${{ github.run_number }}
           release_name: Release ${{ github.run_number }}
-          body: "Please sign the apk using apksigner/mtmanager as the generated apk is unsigned."
+          body: "Please check [this](https://github.com/Burhanverse/Noti#how-to-allow-restricted-settings) to Allow Restricted Settings for Noti."
           
       - name: Upload Release APK
         id: upload_release_asset
