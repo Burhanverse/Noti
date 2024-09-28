@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "987654321012",
+    "firebase_url": "https://my-fake-app-1234.firebaseio.com",
+    "project_id": "my-fake-app-1234",
+    "storage_bucket": "my-fake-app-1234.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:987654321012:android:abc123def456gh789ijk012",
+        "android_client_info": {
+          "package_name": "com.gustavoas.noti"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "987654321012-abc123def456gh789ijk012.apps.googleusercontent.com",
+          "client_type": 1
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzbSyDXYZ123456789abcdef-0123456789abcdef"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
