@@ -1,0 +1,79 @@
+name: APK Builder
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  apk:
+    name: Generate APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Setup Keystore
+        env:
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "storePassword=$KEYSTORE_PASSWORD" >> keystore.properties
+          echo "keyAlias=$KEY_ALIAS" >> keystore.properties
+          echo "keyPassword=$KEY_PASSWORD" >> keystore.properties
+          echo "storeFile=${{ github.workspace }}/key.jks" >> keystore.properties
+          echo "$KEYSTORE" | base64 --decode > "${{ github.workspace }}/key.jks"
+
+      - name: Build Release APK
+        run: |
+          ./gradlew assembleRelease \
+          -PKEYSTORE_FILE=${{ github.workspace }}/key.jks \
+          -PKEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} \
+          -PKEY_ALIAS=${{ secrets.KEY_ALIAS }} \
+          -PKEY_PASSWORD=${{ secrets.KEY_PASSWORD }} --stacktrace
+          mv ./app/build/outputs/apk/release/app-release.apk "./${{ github.event.repository.name }}.apk"
+    
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}
+          path: ./${{ github.event.repository.name }}.apk
+
+  release:
+    name: Release APK
+    runs-on: ubuntu-latest
+    needs: apk
+    steps:
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: "Please check [this](https://github.com/Burhanverse/Noti#how-to-allow-restricted-settings) to Allow Restricted Settings for Noti."
+          
+      - name: Upload Release APK
+        id: upload_release_asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ github.event.repository.name }}.apk
+          asset_name: ./${{ github.event.repository.name }}.apk
+          asset_content_type: application/vnd.android.package-archive
