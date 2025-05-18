@@ -2,6 +2,9 @@ package com.gustavoas.noti
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager.NameNotFoundException
+import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
@@ -153,15 +156,12 @@ object Utils {
 
         if (configuration == "circular") {
             val size = sharedPreferences.getInt("circularProgressBarSize$display", 65)
-            val marginTop = sharedPreferences.getInt("circularProgressBarMarginTop$display", 30)
+            val marginTop = sharedPreferences.getInt("circularProgressBarTopOffset$display", 60)
             val offset = sharedPreferences.getInt("circularProgressBarHorizontalOffset$display", 0)
 
-            if (size != 65)
-                displayConfig.append("\t\t<size>$size</size>\n")
-            if (marginTop != 30)
-                displayConfig.append("\t\t<marginTop>$marginTop</marginTop>\n")
-            if (offset != 0)
-                displayConfig.append("\t\t<offset>$offset</offset>\n")
+            displayConfig.append("\t\t<size>$size</size>\n")
+            displayConfig.append("\t\t<topOffset>$marginTop</topOffset>\n")
+            displayConfig.append("\t\t<offset>$offset</offset>\n")
         }
 
         displayConfig.append("\t</display>")
@@ -261,5 +261,25 @@ object Utils {
                 "dimen",
                 "android"
             )))
+    }
+
+    fun getApplicationInfo(context: Context, packageName: String): ApplicationInfo? {
+        return try {
+            context.packageManager.getApplicationInfo(packageName, 0)
+        } catch (e: NameNotFoundException) {
+            null
+        }
+    }
+
+    fun getApplicationName(context: Context, packageName: String): String? {
+        return context.packageManager.getApplicationLabel(
+            getApplicationInfo(context, packageName) ?: return null
+        ).toString()
+    }
+
+    fun getApplicationIcon(context: Context, packageName: String): Drawable? {
+        return context.packageManager.getApplicationIcon(
+            getApplicationInfo(context, packageName) ?: return null
+        )
     }
 }

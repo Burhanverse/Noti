@@ -7,6 +7,9 @@
         android:key="batteryOptimizations"
         android:title="@string/prefsBatteryBannerSummary"
         android:summary="@string/prefsBatteryBannerButton">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://dontkillmyapp.com"/>
     </com.gustavoas.noti.preferences.BannerPreference>
 
     <PreferenceCategory
@@ -71,22 +74,6 @@
             app:singleLineTitle="false"
             app:fragment="LinearBarFragment"
             app:icon="@drawable/ic_linear_progress_bar"/>
-
-        <SwitchPreferenceCompat
-            android:key="showForDownloads"
-            android:title="@string/prefsShowForDownloadsTitle"
-            android:summary="@string/prefsShowForDownloadsSummary"
-            app:singleLineTitle="false"
-            android:defaultValue="true"
-            app:icon="@drawable/ic_download"/>
-
-        <SwitchPreferenceCompat
-            android:key="showForMedia"
-            android:title="@string/prefsShowForMediaTitle"
-            android:summary="@string/prefsShowForMediaSummary"
-            app:singleLineTitle="false"
-            android:defaultValue="true"
-            app:icon="@drawable/ic_music"/>
 
         <SwitchPreferenceCompat
             android:key="showInLockScreen"

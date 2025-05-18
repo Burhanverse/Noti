@@ -35,6 +35,8 @@ import com.gustavoas.noti.fragments.LinearBarFragment
 import com.gustavoas.noti.fragments.PerAppSettingsFragment
 import com.gustavoas.noti.fragments.SettingsFragment
 import com.gustavoas.noti.model.DeviceConfiguration
+import com.gustavoas.noti.model.ProgressBarApp
+import com.gustavoas.noti.model.ProgressNotification
 import com.gustavoas.noti.services.AccessibilityService
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
@@ -60,7 +62,7 @@ class SettingsActivity : AppCompatActivity(),
         Pair("progressBarStyleLandscape", "linear"),
         Pair("circularProgressBarThickness", 15),
         Pair("circularProgressBarSize", 65),
-        Pair("circularProgressBarMarginTop", 30),
+        Pair("circularProgressBarTopOffset", 60),
         Pair("circularProgressBarHorizontalOffset", 0),
         Pair("linearProgressBarSize", 15),
         Pair("matchStatusBarHeight", false),
@@ -258,14 +260,26 @@ class SettingsActivity : AppCompatActivity(),
     private fun simulateDownload() {
         val intent = Intent(this, AccessibilityService::class.java)
         handler.removeCallbacksAndMessages(null)
-        for (i in 2500..12500 step 2500) {
+        val maxProgress = this.resources.getInteger(R.integer.progress_bar_max)
+        val numberOfSteps = 4
+        val stepSize = maxProgress / numberOfSteps
+        for (i in stepSize..(maxProgress + stepSize) step stepSize) {
             handler.postDelayed({
-                intent.putExtra("progress", i)
-                intent.putExtra("priority", 10)
-                intent.putExtra("removal", i > 10000)
-                intent.putExtra("packageName", packageName)
+                intent.putExtra("removal", i > maxProgress)
+                intent.putExtra("id", packageName)
+                intent.putExtra(
+                    "progressNotification",
+                    ProgressNotification(
+                        ProgressBarApp(
+                            packageName,
+                            true
+                        ),
+                        i,
+                        10
+                    )
+                )
                 startService(intent)
-            }, (i * 0.4 - 1000).toLong())
+            }, ((i - stepSize) * 1000 / stepSize).toLong())
         }
     }
 
@@ -323,6 +337,7 @@ class SettingsActivity : AppCompatActivity(),
                     when (parser.name) {
                         "size" -> config.size = parser.nextText()
                         "marginTop" -> config.marginTop = parser.nextText()
+                        "topOffset" -> config.topOffset = parser.nextText()
                         "offset" -> config.horizontalOffset = parser.nextText()
                     }
                 }
@@ -367,7 +382,7 @@ class SettingsActivity : AppCompatActivity(),
                 .putString("progressBarStyle$appendix", "circular")
                 .putBoolean("blackBackground", true)
                 .putInt("circularProgressBarSize$appendix", config.size?.toIntOrNull() ?: 65)
-                .putInt("circularProgressBarMarginTop$appendix", config.marginTop?.toIntOrNull() ?: 30)
+                .putInt("circularProgressBarTopOffset$appendix", config.topOffset?.toIntOrNull() ?: 60)
                 .putInt("circularProgressBarHorizontalOffset$appendix", config.horizontalOffset?.toIntOrNull() ?: 0)
                 .apply()
         } else {

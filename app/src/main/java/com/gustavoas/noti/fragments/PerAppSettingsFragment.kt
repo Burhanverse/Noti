@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.gustavoas.noti.ProgressBarAppsAdapter
 import com.gustavoas.noti.ProgressBarAppsRepository
 import com.gustavoas.noti.R
+import com.gustavoas.noti.Utils.getApplicationInfo
+import com.gustavoas.noti.Utils.getApplicationName
 import com.gustavoas.noti.model.ProgressBarApp
 import eltos.simpledialogfragment.SimpleDialog
 import eltos.simpledialogfragment.SimpleDialog.OnDialogResultListener.BUTTON_NEUTRAL
@@ -25,7 +27,6 @@ class PerAppSettingsFragment : Fragment(), SimpleDialog.OnDialogResultListener {
     private val apps = ArrayList<ProgressBarApp>()
     private val appsRepository by lazy { ProgressBarAppsRepository.getInstance(requireContext()) }
     private val recyclerView by lazy { requireView().findViewById<RecyclerView>(R.id.apps_recycler_view) }
-    private val packageManager by lazy { requireContext().packageManager }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -61,7 +62,7 @@ class PerAppSettingsFragment : Fragment(), SimpleDialog.OnDialogResultListener {
             if (apps[dialogTag.toInt()].color != color) {
                 apps[dialogTag.toInt()].color = color
                 appsRepository.updateApp(apps[dialogTag.toInt()])
-                recyclerView.adapter?.notifyItemChanged(dialogTag.toInt())
+                recyclerView.adapter?.notifyItemChanged(dialogTag.toInt() + 1)
             }
         }
         return true
@@ -70,32 +71,19 @@ class PerAppSettingsFragment : Fragment(), SimpleDialog.OnDialogResultListener {
     private fun updateAppsFromDatabase() {
         apps.clear()
         apps.addAll(appsRepository.getAll())
-        removeUninstalledApps()
+        removeUnavailableApps()
         alphabetizeApps()
     }
 
-    private fun removeUninstalledApps() {
+    private fun removeUnavailableApps() {
         apps.removeAll { app ->
-            try {
-                packageManager.getApplicationInfo(app.packageName, 0)
-                false
-            } catch (e: Exception) {
-                true
-            }
+            getApplicationInfo(requireContext(), app.packageName)?.enabled != true
         }
     }
 
     private fun alphabetizeApps() {
-        apps.sortBy {
-            try {
-                packageManager.getApplicationLabel(
-                    packageManager.getApplicationInfo(
-                        it.packageName, 0
-                    )
-                ).toString().lowercase()
-            } catch (e: Exception) {
-                it.packageName
-            }
+        apps.sortBy { app ->
+            (getApplicationName(requireContext(), app.packageName) ?: app.packageName).lowercase()
         }
     }
 
