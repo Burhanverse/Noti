@@ -10,6 +10,8 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
@@ -37,13 +39,20 @@ class SettingsFragment : BasePreferenceFragment(),
                 Toast.makeText(
                     requireContext(), getString(R.string.holePunchInstruction), Toast.LENGTH_LONG
                 ).show()
-                sharedPreferences.edit().putBoolean("showHolePunchInstruction", false).apply()
+                sharedPreferences.edit { putBoolean("showHolePunchInstruction", false) }
             }
             updateProgressBarStyle()
         } else if (key == "progressBarColor") {
             updateColorPreferenceSummary()
+        } else if (key == "useNotificationColor") {
+            updateColorPreferenceState()
         }
     }
+
+    private val myApps = listOf(
+        Triple("CalenTile", "https://play.google.com/store/apps/details?id=com.gustavoas.calendarqst", R.drawable.ic_calentile),
+        Triple("Sum Up", "https://play.google.com/store/apps/details?id=com.gustavoas.sumup", R.drawable.ic_sumup),
+    )
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -54,12 +63,25 @@ class SettingsFragment : BasePreferenceFragment(),
 
         updatePermissionDependentPreferences()
 
+        updateColorPreferenceState()
+
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
         sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
+        val appIndex = myApps.indices.random()
+        val appPromo = findPreference<Preference>("selfPromo")
+        appPromo?.title = getString(R.string.prefsCalentileTitle, myApps[appIndex].first)
+        appPromo?.intent = Intent(Intent.ACTION_VIEW, myApps[appIndex].second.toUri())
+        appPromo?.icon = ContextCompat.getDrawable(requireContext(), myApps[appIndex].third)
+
         if (!sharedPreferences.contains("batteryOptimizations")) {
-            sharedPreferences.edit().putBoolean("batteryOptimizations", Build.BRAND.lowercase() != "google").apply()
+            sharedPreferences.edit {
+                putBoolean(
+                    "batteryOptimizations",
+                    Build.BRAND.lowercase() != "google"
+                )
+            }
         }
 
         val batterOptimizationsBanner = findPreference<BannerPreference>("batteryOptimizations")
@@ -106,12 +128,14 @@ class SettingsFragment : BasePreferenceFragment(),
     override fun onResult(dialogTag: String, which: Int, extras: Bundle): Boolean {
         if (which == BUTTON_POSITIVE) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PreferenceManager.getDefaultSharedPreferences(requireContext()).edit().putBoolean(
+                PreferenceManager.getDefaultSharedPreferences(requireContext()).edit {
+                    putBoolean(
                         "usingMaterialYouColor",
                         extras.getInt(SimpleColorDialog.COLOR) == ContextCompat.getColor(
                             requireContext(), R.color.system_accent_color
                         ) && extras.getInt(SimpleColorDialog.SELECTED_SINGLE_POSITION) != 19
-                    ).apply()
+                    )
+                }
             }
 
             findPreference<ColorPreferenceCompat>("progressBarColor")?.value = extras.getInt(
@@ -120,6 +144,15 @@ class SettingsFragment : BasePreferenceFragment(),
             )
         }
         return true
+    }
+
+    private fun updateColorPreferenceState() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val colorPreference = findPreference<ColorPreferenceCompat>("progressBarColor")
+        val useNotificationColor = sharedPreferences.getBoolean("useNotificationColor", false)
+
+        colorPreference?.isEnabled = !useNotificationColor
+        colorPreference?.icon?.alpha = if (useNotificationColor) 80 else 255
     }
 
     private fun updateColorPreferenceSummary() {
@@ -132,11 +165,13 @@ class SettingsFragment : BasePreferenceFragment(),
         val useMaterialYou = sharedPreferences.getBoolean("usingMaterialYouColor", false)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && colorName == null && useMaterialYou) {
-            sharedPreferences.edit().putInt(
+            sharedPreferences.edit {
+                putInt(
                     "progressBarColor", ContextCompat.getColor(
                         requireContext(), R.color.system_accent_color
                     )
-                ).apply()
+                )
+            }
 
             findPreference<ColorPreferenceCompat>("progressBarColor")?.value =
                 ContextCompat.getColor(requireContext(), R.color.system_accent_color)

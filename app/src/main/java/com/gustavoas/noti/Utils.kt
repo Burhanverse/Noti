@@ -21,6 +21,7 @@ import androidx.preference.PreferenceManager
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.gustavoas.noti.model.ProgressBarApp
 import com.gustavoas.noti.services.AccessibilityService
 import com.gustavoas.noti.services.NotificationListenerService
 import eltos.simpledialogfragment.color.SimpleColorDialog
@@ -33,8 +34,11 @@ object Utils {
     fun hasAccessibilityPermission(context: Context): Boolean {
         val accessibilityServiceComponentName = ComponentName(context, AccessibilityService::class.java)
         val enabledServices = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
-        return enabledServices?.contains(accessibilityServiceComponentName.flattenToString())
-            ?: enabledServices?.contains(accessibilityServiceComponentName.flattenToShortString()) ?: false
+
+        return enabledServices.orEmpty().let {
+            it.contains(accessibilityServiceComponentName.flattenToString()) ||
+                    it.contains(accessibilityServiceComponentName.flattenToShortString())
+        }
     }
 
     fun hasNotificationListenerPermission(context: Context): Boolean {
@@ -280,6 +284,26 @@ object Utils {
     fun getApplicationIcon(context: Context, packageName: String): Drawable? {
         return context.packageManager.getApplicationIcon(
             getApplicationInfo(context, packageName) ?: return null
+        )
+    }
+
+    fun getColorForApp(context: Context, progressBarApp: ProgressBarApp): Int {
+        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val useNotificationColor = sharedPrefs.getBoolean("useNotificationColor", false)
+        val useMaterialYou = sharedPrefs.getBoolean("usingMaterialYouColor", false)
+
+        if ((progressBarApp.useDefaultColor && useNotificationColor) ||
+            (!progressBarApp.useDefaultColor && !progressBarApp.useMaterialYouColor)) {
+            progressBarApp.color?.let { return it }
+        }
+
+        if ((progressBarApp.useMaterialYouColor) ||
+            (progressBarApp.useDefaultColor && useMaterialYou)) {
+            return ContextCompat.getColor(context, R.color.system_accent_color)
+        }
+
+        return sharedPrefs.getInt(
+            "progressBarColor", ContextCompat.getColor(context, R.color.purple_500)
         )
     }
 }

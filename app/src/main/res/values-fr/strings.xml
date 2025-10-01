@@ -2,7 +2,7 @@
 <resources>
     <string name="colorWhite">Blanc</string>
     <string name="reset">Réinitialiser</string>
-    <string name="perAppSettingsEmptyView">Aucune barre de progression n\'a encore été trouvée. Noti découvrira quelles applications ont des barres de progression lorsque vous utiliserez votre téléphone.</string>
+    <string name="perAppSettingsEmptyView">Noti identifiera davantage d\'applications compatibles au fur et à mesure que des notifications seront reçues</string>
     <string name="prefsCategoryGeneral">Général</string>
     <string name="notificationListenerDescription">Lire les notifications avec une barre de progression</string>
     <string name="prefsCalentileSummary">Soutenir le développeur</string>
@@ -18,7 +18,7 @@
     <string name="colorGreen">Vert</string>
     <string name="colorGrey">Gris</string>
     <string name="prefsCircularBarShareConfigSummary">Laissez d\'autres personnes possédant le même appareil d\'utiliser votre configuration</string>
-    <string name="prefsCalentileTitle">Essayez CalenTile sur Google Play</string>
+    <string name="prefsCalentileTitle">Essayez %s sur Google Play</string>
     <string name="colorBlack">Noir</string>
     <string name="prefsAccessibilityPermissionTitle">Accorder la permission d\'accessibilité</string>
     <string name="prefsCategoryCustomization">Personnalisation</string>
@@ -41,13 +41,13 @@
     <string name="colorDeepPurple">Violet foncé</string>
     <string name="prefsCircularProgressBarTweaks">Ajustements de la barre de progression circulaire</string>
     <string name="prefsProgressBarStyleEntryCircular">Barre de progression circulaire</string>
-    <string name="prefsNotificationPermissionTitle">Accorder l\'accès aux notifications</string>
+    <string name="prefsNotificationPermissionTitle">Autoriser l\'accès aux notifications</string>
     <string name="prefsProgressBarThicknessSummary">Changer la taille de la barre de progression</string>
     <string name="colorYellow">Jaune</string>
     <string name="prefsProgressBarMarginTopSummary">Changer l\'espacement du haut de l\'écran</string>
     <string name="prefsPerAppSettingsTitle">Paramètres par application</string>
     <string name="colorCyan">Cyan</string>
-    <string name="prefsCircularBarShareConfigTitle">Ajusté parfaitement ? Partagez votre configuration</string>
+    <string name="prefsCircularBarShareConfigTitle">Ajusté parfaitement? Partagez votre configuration</string>
     <string name="prefsLinearProgressBarTweaks">Ajustements de la barre de progression linéaire</string>
     <string name="holePunchInstruction">Changez l\'alignement de la barre de progression circulaire avec les curseurs</string>
     <string name="colorIndigo">Indigo</string>
@@ -75,6 +75,11 @@
     <string name="prefsCutoutSizeTitle">Taille de la coupe</string>
     <string name="prefsCutoutSizeSummary">Changer la taille du diamètre intérieur</string>
     <string name="prefsMultiScreenInfoCard">Pour les écrans partagés, accédez au paramètres de chaque écran pour ajuster la barre</string>
-    <string name="shareConfigPositiveMessage">Merci d\'avoir partagé votre configuration !</string>
+    <string name="shareConfigPositiveMessage">Merci d\'avoir partagé votre configuration!</string>
     <string name="shareConfigNoInternetMessage">Activez le réseau pour téléverser la configuration</string>
+    <string name="activateToggle">Activé pour</string>
+    <string name="downloads">Téléchargements</string>
+    <string name="media">Médias</string>
+    <string name="prefsNotificationColorTitle">Faire correspondre avec la couleur de la notification</string>
+    <string name="prefsNotificationColorSummary">Utiliser la couleur de la notification pour la barre de progression</string>
 </resources>
